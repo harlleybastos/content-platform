@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #202124;
+  overflow: hidden;
+}
+
+.quill {
+  background-color: white;
+  color: #202124;
+}
+
+.rdw-editor-main{
+  background: white;
+}
+
+.rdw-editor-toolbar {
+  background: white;
+}
