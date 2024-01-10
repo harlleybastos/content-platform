@@ -17,13 +17,13 @@
 1. **Clone the repository:**
 
    ```bash
-   git clone https://gitlab.com/devsquad-trials/harlleybastos/content-platform-backend.git
+   git clone https://github.com/harlleybastos/content-platform.git
    ```
 
 2. **Navigate to the project directory:**
 
    ```bash
-   cd content-platform-backend
+   cd content-platform/backend
    ```
 
 3. **Install the dependencies:**

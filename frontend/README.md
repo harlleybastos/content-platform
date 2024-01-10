@@ -23,13 +23,13 @@
 1. **Clone the repository:**
 
    ```bash
-   git clone https://gitlab.com/devsquad-trials/harlleybastos/content-platform-frontend.git
+   git clone https://github.com/harlleybastos/content-platform.git
    ```
 
 2. **Navigate to the project directory:**
 
    ```bash
-   cd content-platform-frontend
+   cd content-platform/frontend
    ```
 
 3. **Install the dependencies:**
