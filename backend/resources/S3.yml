@@ -1,0 +1,24 @@
+ProfilePhotosBucket:
+  Type: AWS::S3::Bucket
+  Properties:
+    BucketName: content-platform-profile-photos-${self:provider.stage}
+    PublicAccessBlockConfiguration:
+      BlockPublicAcls: false
+      BlockPublicPolicy: false
+      IgnorePublicAcls: false
+      RestrictPublicBuckets: false
+    OwnershipControls: 
+      Rules:
+        - ObjectOwnership: ObjectWriter
+    CorsConfiguration:
+      CorsRules:
+        - AllowedOrigins:
+            - "*"
+          AllowedHeaders:
+            - "*"
+          AllowedMethods:
+            - GET
+            - PUT
+            - POST
+            - DELETE
+          MaxAge: 3000

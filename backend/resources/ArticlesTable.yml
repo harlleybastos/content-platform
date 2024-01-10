@@ -1,0 +1,15 @@
+ArticlesTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: articles-${self:provider.stage}
+    BillingMode: PAY_PER_REQUEST
+    AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: title
+        AttributeType: S
+    KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      - AttributeName: title
+        KeyType: RANGE

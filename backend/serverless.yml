@@ -1,0 +1,172 @@
+service: content-platform-backend
+
+frameworkVersion: "3"
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 128
+  logRetentionInDays: 1
+  environment:
+    REGION: ${self:provider.region}
+    ARTICLES_TABLE: !Ref ArticlesTable
+    STAGE: ${opt:stage, 'dev'}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_USER_POOL_CLIENT_ID: ${env:COGNITO_USER_POOL_CLIENT_ID}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+  httpApi:
+    cors: true
+  apiGateway:
+    binaryMediaTypes:
+      - 'image/png'
+      - 'image/jpeg'
+      - 'multipart/form-data'
+
+functions:
+  signup:
+    handler: src/handlers/signup.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - cognito-idp:AdminCreateUser
+          - cognito-idp:AdminAddUserToGroup
+          - s3:PutObject
+          - s3:PutObjectAcl
+          - s3:PutBucketPolicy 
+          - s3:GetObject
+        Resource:
+          - !GetAtt CognitoUserPool.Arn
+          - arn:aws:s3:::content-platform-profile-photos-${self:provider.stage}/*
+    events:
+      - httpApi:
+          path: /signup
+          method: post
+  getArticleById:
+    handler: src/handlers/getArticleById.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:GetItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles/{id}
+          method: post
+  getArticles:
+    handler: src/handlers/getArticles.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles
+          method: get
+  getUnapprovedComments:
+    handler: src/handlers/getUnapprovedComments.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:GetItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles/unapproved-comments
+          method: get
+  createArticle:
+    handler: src/handlers/createArticle.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles
+          method: post
+  updateArticle:
+    handler: src/handlers/updateArticle.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:updateItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles/{id}
+          method: put
+  addComment:
+    handler: src/handlers/addComment.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:updateItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles/{id}/comment
+          method: post
+  approveComment:
+    handler: src/handlers/approveComment.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:updateItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles/{id}/comment/approve/{commentIndex}
+          method: put
+  denyComment:
+    handler: src/handlers/denyComment.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:updateItem
+        Resource: !GetAtt ArticlesTable.Arn
+    events:
+      - httpApi:
+          path: /articles/{id}/comment/deny/{commentIndex}
+          method: put
+  processComment:
+    handler: src/handlers/processComment.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:updateItem
+          - comprehend:DetectSentiment 
+        Resource: 
+          - !GetAtt ArticlesTable.Arn
+          - "*" 
+    events:
+      - httpApi:
+          path: /articles/{id}/comment/processComment/{commentIndex}
+          method: post
+  generateMetadata:
+    handler: src/handlers/generateMetadata.handler
+    events:
+      - httpApi:
+          path: /article/generate-seo-metadata
+          method: post
+
+
+resources:
+  Resources:
+    ArticlesTable: ${file(resources/ArticlesTable.yml):ArticlesTable}
+    CognitoUserPool: ${file(resources/Cognito.yml):CognitoUserPool}
+    CognitoUserPoolClient: ${file(resources/Cognito.yml):CognitoUserPoolClient}
+    CognitoUserPoolDomain: ${file(resources/Cognito.yml):CognitoUserPoolDomain}
+    ContentManagerGroup: ${file(resources/Cognito.yml):ContentManagerGroup}
+    ClientGroup: ${file(resources/Cognito.yml):ClientGroup}
+    ProfilePhotosBucket: ${file(resources/S3.yml):ProfilePhotosBucket}
+
+plugins:
+  - serverless-iam-roles-per-function
+

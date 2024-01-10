@@ -1,0 +1,55 @@
+CognitoUserPool:
+  Type: AWS::Cognito::UserPool
+  Properties:
+    UserPoolName: ArticlesUserPool-${self:provider.stage}
+    MfaConfiguration: OFF
+    UsernameAttributes:
+      - email
+    AutoVerifiedAttributes:
+      - email
+    EmailVerificationMessage: "Your verification code is {####}."
+    EmailVerificationSubject: "Your PublishPulse Verification Code"
+    Schema:
+      - Name: profile_photo_url
+        AttributeDataType: String
+        Mutable: true
+        Required: false
+
+CognitoUserPoolClient:
+  Type: AWS::Cognito::UserPoolClient
+  Properties:
+    ClientName: ArticlesUserPoolClient-${self:provider.stage}
+    AllowedOAuthFlowsUserPoolClient: true
+    AllowedOAuthScopes:
+      - email
+      - profile
+      - openid
+    SupportedIdentityProviders:
+      - COGNITO
+    AllowedOAuthFlows:
+      - implicit
+    CallbackURLs:
+      - http://localhost:3000
+    DefaultRedirectURI: http://localhost:3000
+    GenerateSecret: false
+    UserPoolId: !Ref CognitoUserPool
+
+CognitoUserPoolDomain:
+  Type: AWS::Cognito::UserPoolDomain
+  Properties:
+    Domain: articlesauthidp-${self:provider.stage}
+    UserPoolId: !Ref CognitoUserPool
+
+ContentManagerGroup:
+  Type: AWS::Cognito::UserPoolGroup
+  Properties:
+    GroupName: content-manager
+    UserPoolId: !Ref CognitoUserPool
+    Precedence: 1
+
+ClientGroup:
+  Type: AWS::Cognito::UserPoolGroup
+  Properties:
+    GroupName: client
+    UserPoolId: !Ref CognitoUserPool
+    Precedence: 2
